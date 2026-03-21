@@ -177,7 +177,7 @@
 
 @layer utilities {
   .wrapper {
-    @apply max-w-7xl px-5 mx-auto w-full;
+    @apply !max-w-7xl px-5 mx-auto w-full;
   }
   .container {
     @apply pt-[94px] pb-18 min-h-screen;

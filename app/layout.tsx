@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Serif, Mona_Sans, Inter } from "next/font/google";
-import "./globals.css";
+import { IBM_Plex_Serif, Mona_Sans } from "next/font/google";
+import Navbar from "@/components/navbar";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const ibmPlexSerif = IBM_Plex_Serif({
   variable: "--font-ibm-plex-serif",
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
   title: "Bookified",
   description:
     "Transform your books into interactive AI conversations. Upload PDFs, and chat with your books using voice.",
+  icons: { icon: [{ url: "/assets/logo.png", type: "image/png" }] },
 };
 
 export default function RootLayout({
@@ -30,12 +32,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn("relative", "antialiased", ibmPlexSerif.variable, monaSans.variable, "font-sans", inter.variable)}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={cn(
+          "relative antialiased",
+          ibmPlexSerif.variable,
+          monaSans.variable,
+          "font-sans",
+        )}
+      >
+        <ClerkProvider>
+          <Navbar />
+          {children}
+        </ClerkProvider>
+      </body>
     </html>
   );
 }
