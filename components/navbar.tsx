@@ -5,20 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/constants";
-import {
-  Show,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+import { Show, SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user } = useUser();
 
   return (
-    <header className="w-full fixed z-50 bg-('--bg-primary')">
+    <header className="w-full fixed z-50 bg-[var(--bg-primary)]">
       <div className="wrapper navbar-height py-4 flex items-center justify-between">
         <Link href="/" className="flex gap-0.5 items-center">
           <Image
@@ -32,7 +26,7 @@ const Navbar = () => {
         </Link>
 
         <nav className="w-fit flex gap-7.5 items-center">
-          {navItems.map(({ label, href }: INavItem) => {
+          {navItems.map(({ label, href }) => {
             const isActive =
               pathname === href || (href !== "/" && pathname.startsWith(href));
 

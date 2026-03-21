@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import Footer from "@/components/footer";
 
 const ibmPlexSerif = IBM_Plex_Serif({
   variable: "--font-ibm-plex-serif",
@@ -44,6 +45,7 @@ export default function RootLayout({
         <ClerkProvider>
           <Navbar />
           {children}
+          <Footer />
         </ClerkProvider>
       </body>
     </html>
