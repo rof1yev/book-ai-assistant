@@ -1,6 +1,6 @@
 import { sampleBooks } from "@/lib/constants";
-import HeroSection from "./_components/hero-section";
-import BookCard from "./_components/book-card";
+import HeroSection from "../../_components/hero-section";
+import BookCard from "../../_components/book-card";
 
 export default function HomePage() {
   return (

@@ -6,10 +6,18 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/constants";
 import { Show, SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { useRef } from "react";
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user } = useUser();
+
+  const buttonRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = () => {
+    const btn = buttonRef.current?.querySelector("button");
+    btn?.click();
+  };
 
   return (
     <header className="w-full fixed z-50 bg-[var(--bg-primary)]">
@@ -49,13 +57,16 @@ const Navbar = () => {
               <SignInButton mode="modal" />
             </Show>
             <Show when="signed-in">
-              <div className="nav-user-link">
-                <UserButton />
-                {user?.firstName && (
-                  <Link href="/subscriptions" className="nav-user-name">
-                    {user.firstName}
-                  </Link>
-                )}
+              <div
+                onClick={handleClick}
+                className="nav-user-link cursor-pointer"
+              >
+                <div ref={buttonRef}>
+                  <UserButton />
+                </div>
+                <span className="font-medium text-foreground">
+                  {user?.firstName}
+                </span>
               </div>
             </Show>
           </div>

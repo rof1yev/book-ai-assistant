@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Serif, Mona_Sans } from "next/font/google";
-import Navbar from "@/components/navbar";
+import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import Footer from "@/components/footer";
 
 const ibmPlexSerif = IBM_Plex_Serif({
   variable: "--font-ibm-plex-serif",
@@ -33,21 +35,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "relative antialiased",
-          ibmPlexSerif.variable,
-          monaSans.variable,
-          "font-sans",
-        )}
-      >
-        <ClerkProvider>
-          <Navbar />
-          {children}
-          <Footer />
-        </ClerkProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={cn(
+            "relative antialiased",
+            ibmPlexSerif.variable,
+            monaSans.variable,
+            "font-sans",
+          )}
+        >
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Toaster />
+            <Navbar />
+            {children}
+            <Footer />
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
