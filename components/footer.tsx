@@ -30,7 +30,7 @@ const Footer = () => {
         </p>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {social_networks.map((Icon, i) => (
           <Button
             key={i}

@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  ChangeEvent,
-  MouseEvent,
-  MouseEventHandler,
-  useCallback,
-  useRef,
-} from "react";
+import { ChangeEvent, MouseEvent, useCallback, useRef } from "react";
 import { FieldValues, useController } from "react-hook-form";
 import { FormControl, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { FileUploadFieldProps } from "@/types/types";
+import { FileUploadFieldProps } from "@/types";
 import { cn } from "@/lib/utils";
 import { XIcon } from "lucide-react";
 
@@ -70,7 +64,7 @@ const FileUploader = <T extends FieldValues>({
 
           {isUploaded ? (
             <div className="flex flex-col items-center relative w-full px-4">
-              <p className="upload-dropzone-text line-clamp-1">
+              <p className="upload-dropzone-text truncate max-w-[660px]">
                 {(value as File).name}
               </p>
               <button

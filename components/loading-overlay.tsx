@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 const LoadingOverlay = () => {
   return (
-    <div className="loading-wrapper">
+    <div className="loading-wrapper h-screen">
       <div className="loading-shadow-wrapper bg-white shadow-soft-lg">
         <div className="loading-shadow">
           <Loader2 className="loading-animation w-12 h-12 text-[#663820]" />
