@@ -4,9 +4,9 @@ import { handleUpload, HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
-
   try {
+    const body = (await request.json()) as HandleUploadBody;
+
     if (!process.env.bookified_READ_WRITE_TOKEN) {
       return NextResponse.json(
         { error: "Server configuration error: Missing upload token" },
@@ -50,7 +50,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const message =
       e instanceof Error ? e.message : "An unknown error occurred";
     const status = message.includes("Unauthorized") ? 401 : 500;
-
-    return NextResponse.json({ error: message }, { status });
+    const clientMessage = status === 401 ? "Unauthorized" : "Upload failed";
+    return NextResponse.json({ error: clientMessage }, { status });
   }
 }
