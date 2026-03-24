@@ -20,7 +20,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="w-full fixed z-50 bg-[var(--bg-primary)]">
+    <header className="w-full fixed z-50 bg-[var(--bg-primary)] border-b">
       <div className="wrapper navbar-height py-4 flex items-center justify-between">
         <Link href="/" className="flex gap-0.5 items-center">
           <Image
