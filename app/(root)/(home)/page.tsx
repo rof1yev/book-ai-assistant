@@ -12,7 +12,11 @@ export default async function HomePage() {
       <HeroSection />
 
       <div className="library-books-grid">
-        {[...sampleBooks, ...books].map((book) => (
+        {Array.from(
+          new Map(
+            [...sampleBooks, ...books].map((book) => [book.slug, book]),
+          ).values(),
+        ).map((book) => (
           <BookCard
             key={book._id}
             title={book.title}
