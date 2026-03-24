@@ -24,6 +24,8 @@ const BookSchema = new Schema<IBook>(
   { timestamps: true },
 );
 
+BookSchema.index({ createdAt: -1 });
+
 const Book = models.Book || model<IBook>("Book", BookSchema);
 
 export default Book;
