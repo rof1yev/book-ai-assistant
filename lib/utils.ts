@@ -11,9 +11,19 @@ export function cn(...inputs: ClassValue[]) {
 export const serializeData = <T>(data: T): T =>
   JSON.parse(JSON.stringify(data));
 
-// Auto generate slug
+// Auto generate slug from title (preserves decimal/version segments)
 export function generateSlug(text: string): string {
   return text
+    .toLowerCase() // Convert to lowercase
+    .trim() // Remove whitespace from both ends
+    .replace(/[^\w\s-]/g, "") // Remove special characters (keep letters, numbers, spaces, hyphens)
+    .replace(/[\s_]+/g, "-") // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+}
+
+// Generate slug for filenames (removes file extensions like .pdf, .txt, etc.)
+export function generateFilenameSlug(filename: string): string {
+  return filename
     .replace(/\.[^/.]+$/, "") // Remove file extension (.pdf, .txt, etc.)
     .toLowerCase() // Convert to lowercase
     .trim() // Remove whitespace from both ends
@@ -104,32 +114,24 @@ async function getPdfjsLib() {
   return pdfjsLib;
 }
 
-// Reuse a single canvas across calls
-let sharedCanvas: HTMLCanvasElement | null = null;
-
-function getCanvas(width: number, height: number): HTMLCanvasElement {
-  if (!sharedCanvas) {
-    sharedCanvas = document.createElement("canvas");
-  }
-  sharedCanvas.width = width;
-  sharedCanvas.height = height;
-  return sharedCanvas;
-}
-
 export async function parsePDFFile(file: File) {
+  let pdfDocument: any;
+
   try {
     const pdfjsLib = await getPdfjsLib();
     const arrayBuffer = await file.arrayBuffer();
 
     // Load PDF once
-    const pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer })
-      .promise;
+    pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
     // --- Cover image: render at 1x (not 2x) for speed ---
     const firstPage = await pdfDocument.getPage(1);
     const viewport = firstPage.getViewport({ scale: 0.5 }); // 1x is fast; bump to 1.5 only if quality matters
 
-    const canvas = getCanvas(viewport.width, viewport.height);
+    // Create a fresh canvas for this invocation to avoid race conditions
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
     const context = canvas.getContext("2d");
 
     if (!context) throw new Error("Could not get canvas context");
@@ -150,8 +152,8 @@ export async function parsePDFFile(file: File) {
       const textContent = await page.getTextContent();
 
       const pageText = textContent.items
-        .filter((item) => "str" in item)
-        .map((item) => (item as { str: string }).str)
+        .filter((item: any) => "str" in item)
+        .map((item: any) => (item as { str: string }).str)
         .join(" ");
 
       const pageSegments = splitIntoSegments(pageText, 500, 50);
@@ -162,13 +164,16 @@ export async function parsePDFFile(file: File) {
       segments.push(...pageSegments);
     }
 
-    await pdfDocument.destroy();
-
     return { content: segments, cover: coverDataURL };
   } catch (error) {
     console.error("Error parsing PDF:", error);
     throw new Error(
       `Failed to parse PDF file: ${error instanceof Error ? error.message : String(error)}`,
     );
+  } finally {
+    // Ensure PDF document resources are always cleaned up
+    if (pdfDocument) {
+      await pdfDocument.destroy();
+    }
   }
 }

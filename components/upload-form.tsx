@@ -99,9 +99,15 @@ const UploadForm = () => {
 
       if (data.coverImage) {
         const coverFile = data.coverImage;
+        const coverExtension =
+          coverFile.type === "image/png"
+            ? "png"
+            : coverFile.type === "image/webp"
+              ? "webp"
+              : "jpg";
 
         const uploadedCoverBlob = await upload(
-          `${fileTitle}_cover.png`,
+          `${fileTitle}_cover.${coverExtension}`,
           coverFile,
           {
             access: "public",
@@ -116,14 +122,25 @@ const UploadForm = () => {
         const response = await fetch(parsedPDF.cover);
         const blob = await response.blob();
 
-        const uploadedCoverBlog = await upload(`${fileTitle}_cover.png`, blob, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          contentType: "image/png",
-        });
+        const coverExtension =
+          blob.type === "image/png"
+            ? "png"
+            : blob.type === "image/webp"
+              ? "webp"
+              : "jpg";
 
-        coverUrl = uploadedCoverBlog.url;
-        coverBlobKey = uploadedCoverBlog.pathname;
+        const uploadedCoverBlob = await upload(
+          `${fileTitle}_cover.${coverExtension}`,
+          blob,
+          {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            contentType: blob.type || "image/jpeg",
+          },
+        );
+
+        coverUrl = uploadedCoverBlob.url;
+        coverBlobKey = uploadedCoverBlob.pathname;
       }
 
       const book = await createBook({
@@ -138,16 +155,12 @@ const UploadForm = () => {
         fileSize: pdfFile.size,
       });
 
-      if (!book.success) {
-        throw new Error(
-          book.error instanceof Error ? book.error.message : String(book.error),
-        );
-      }
+      if (!book.success) throw new Error(book.error);
 
-      if (book.alreadyExists) {
+      if (book.alreadyExists && book.slug) {
         toast.info("Book already exists", { id: checkingToastId });
         form.reset();
-        router.push(`/books/${existingCheck.book?.slug}`);
+        router.push(`/books/${book.slug}`);
         return;
       }
 
@@ -158,13 +171,7 @@ const UploadForm = () => {
         parsedPDF.content,
       );
 
-      if (!segments.success) {
-        throw new Error(
-          segments.error instanceof Error
-            ? segments.error.message
-            : String(segments.error),
-        );
-      }
+      if (!segments.success) throw new Error(segments.error);
 
       form.reset();
       toast.success("Book uploaded successfully!", { id: checkingToastId });

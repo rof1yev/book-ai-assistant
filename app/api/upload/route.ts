@@ -38,8 +38,17 @@ export async function POST(request: Request): Promise<NextResponse> {
       onUploadCompleted: async ({ blob, tokenPayload }) => {
         console.log("File upload to blob: ", blob.url);
 
-        const payload = tokenPayload ? JSON.parse(tokenPayload) : null;
-        const userId = payload?.userId;
+        let userId: string | undefined;
+        if (tokenPayload) {
+          try {
+            const payload = JSON.parse(tokenPayload) as { userId?: unknown };
+            if (typeof payload.userId === "string") {
+              userId = payload.userId;
+            }
+          } catch {
+            console.warn("Invalid token payload JSON in onUploadCompleted");
+          }
+        }
 
         // TODO: PostHog
       },
