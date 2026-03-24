@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/database/mongoose";
 import Book from "@/database/models/book.model";
 import { generateSlug, serializeData } from "../utils";
-import { CreateBook, TextSegment } from "@/types";
+import { CreateBook, TextSegment, IBook, BookType } from "@/types";
 import BookSegment from "@/database/models/book-segment.model";
 
 export const getAllBooks = async () => {
@@ -167,6 +167,33 @@ export const saveBookSegments = async (
     return {
       success: false,
       error: "Failed to save book segments",
+    };
+  }
+};
+
+export const getBookBySlug = async (slug: string) => {
+  try {
+    await connectToDatabase();
+
+    const book = await Book.findOne({ slug }).lean();
+
+    if (!book)
+      return {
+        success: false,
+        error: "Book not found",
+      };
+
+    const serializedBook = serializeData(book) as unknown as BookType;
+    return {
+      success: true,
+      data: serializedBook,
+    };
+  } catch (e) {
+    console.error("Error fetching book by slug:", e);
+
+    return {
+      success: false,
+      error: "Failed to fetch book",
     };
   }
 };

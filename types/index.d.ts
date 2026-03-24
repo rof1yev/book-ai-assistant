@@ -136,3 +136,21 @@ export interface FileUploadFieldProps<T extends FieldValues> {
   placeholder: string;
   hint: string;
 }
+
+//
+export interface BookType {
+  _id: string;
+  clerkId: string;
+  title: string;
+  slug: string;
+  author: string;
+  persona?: string;
+  fileURL: string;
+  fileBlobKey: string;
+  coverURL: string;
+  coverBlobKey?: string;
+  fileSize: number;
+  totalSegments: number;
+  createdAt: string;
+  updatedAt: string;
+}
