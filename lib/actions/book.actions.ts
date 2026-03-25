@@ -3,9 +3,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/database/mongoose";
 import Book from "@/database/models/book.model";
-import { generateSlug, serializeData } from "../utils";
+import { escapeRegex, generateSlug, serializeData } from "../utils";
 import { CreateBook, TextSegment, IBook, BookType } from "@/types";
 import BookSegment from "@/database/models/book-segment.model";
+import mongoose from "mongoose";
 
 export const getAllBooks = async () => {
   try {
@@ -194,6 +195,73 @@ export const getBookBySlug = async (slug: string) => {
     return {
       success: false,
       error: "Failed to fetch book",
+    };
+  }
+};
+
+export const searchBookSegments = async (
+  bookId: string,
+  query: string,
+  limit: number = 5,
+) => {
+  try {
+    await connectToDatabase();
+
+    console.log(`Searching for: "${query}" in book ${bookId}`);
+
+    // Verify the book exists
+    const book = await Book.findById(bookId).lean();
+    if (!book)
+      return {
+        success: false,
+        error: "Book not found",
+        data: [],
+      };
+
+    let segments: Record<string, unknown>[] = [];
+    try {
+      segments = await BookSegment.find({ bookId, $text: { $search: query } })
+        .select("_id bookId content segmentIndex pageNumber wordCount")
+        .sort({ score: { $meta: "textScore" } })
+        .limit(limit)
+        .lean();
+    } catch (error) {
+      segments = [];
+    }
+
+    // Use MongoDB text search to find matching segments
+    if (segments.length === 0) {
+      const keywords = query.split(/\s+/).filter((k) => k.length > 2);
+      const pattern = keywords.map(escapeRegex).join("|");
+
+      segments = await BookSegment.find({
+        bookId,
+        content: { $regex: pattern, $options: "i" },
+      })
+        .select("_id bookId content segmentIndex pageNumber wordCount")
+        .sort({ segmentIndex: 1 })
+        .limit(limit)
+        .lean();
+
+      console.log(`Search complete. Found ${segments.length} results`);
+
+      return {
+        success: true,
+        data: serializeData(segments),
+      };
+    }
+
+    return {
+      success: true,
+      segments: serializeData(segments),
+    };
+  } catch (e) {
+    console.error("Error searching book segments:", e);
+
+    return {
+      success: false,
+      error: (e as Error).message || "Failed to search book segments",
+      data: [],
     };
   }
 };
