@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { Types } from "mongoose";
 import { searchBookSegments } from "@/lib/actions/book.actions";
+import { connectToDatabase } from "@/database/mongoose";
+import Book from "@/database/models/book.model";
+import { BookType } from "@/types";
 
 interface VapiToolCall {
   name: string;
@@ -40,6 +45,55 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
 
+    // ============================================
+    // VALIDATE OBJECTID FORMAT
+    // ============================================
+
+    if (!Types.ObjectId.isValid(bookId as string))
+      return NextResponse.json(
+        { error: "Invalid bookId format. Must be a valid MongoDB ObjectId" },
+        { status: 400 },
+      );
+
+    // ============================================
+    // AUTHORIZATION CHECK
+    // ============================================
+
+    // Get authenticated user
+    const { userId } = await auth();
+
+    if (!userId)
+      return NextResponse.json(
+        { error: "Unauthorized: User not authenticated" },
+        { status: 401 },
+      );
+
+    // Verify user owns the book
+    try {
+      await connectToDatabase();
+
+      const book = await Book.findById(bookId).lean<BookType>();
+
+      if (!book)
+        return NextResponse.json({ error: "Book not found" }, { status: 404 });
+
+      if (book.clerkId !== userId)
+        return NextResponse.json(
+          { error: "Forbidden: You do not have access to this book" },
+          { status: 403 },
+        );
+    } catch (e) {
+      console.error("Error verifying book ownership:", e);
+      return NextResponse.json(
+        { error: "Internal server error during authorization" },
+        { status: 500 },
+      );
+    }
+
+    // ============================================
+    // SEARCH FOR MATCHING SEGMENTS
+    // ============================================
+
     // Search for matching segments
     const searchResult = await searchBookSegments(
       bookId as string,
@@ -55,7 +109,7 @@ export async function POST(request: NextRequest) {
       );
 
     // Combine segments with double newlines
-    const combinedContent = (searchResult.segments as any[])
+    const combinedContent = (searchResult.data as any[])
       .map((segment: any) => segment.content)
       .join("\n\n");
 

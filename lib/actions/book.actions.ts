@@ -231,7 +231,23 @@ export const searchBookSegments = async (
 
     // Use MongoDB text search to find matching segments
     if (segments.length === 0) {
-      const keywords = query.split(/\s+/).filter((k) => k.length > 2);
+      // Extract keywords, preferring longer terms but falling back to all tokens
+      let keywords = query.split(/\s+/).filter((k) => k.length > 2);
+
+      // If no keywords found, use all non-empty tokens (including short ones like "AI", "ML")
+      if (keywords.length === 0)
+        keywords = query
+          .split(/\s+/)
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+      // If still no valid tokens, return empty result
+      if (keywords.length === 0)
+        return {
+          success: true,
+          data: [],
+        };
+
       const pattern = keywords.map(escapeRegex).join("|");
 
       segments = await BookSegment.find({
@@ -253,7 +269,7 @@ export const searchBookSegments = async (
 
     return {
       success: true,
-      segments: serializeData(segments),
+      data: serializeData(segments),
     };
   } catch (e) {
     console.error("Error searching book segments:", e);

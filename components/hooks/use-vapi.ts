@@ -1,6 +1,7 @@
 import {
   endVoiceSession,
   startVoiceSession,
+  deleteVoiceSession,
 } from "@/lib/actions/session.actions";
 import { ASSISTANT_ID, DEFAULT_VOICE, VOICE_SETTINGS } from "@/lib/constants";
 import { BookType, Messages } from "@/types";
@@ -270,7 +271,7 @@ const useVapi = (book: BookType) => {
 
       if (!result.success) {
         setLimitError(
-          result.error || "Session limit reached. Please upgrade your plane",
+          result.error || "Session limit reached. Please upgrade your plan",
         );
         setStatus("idle");
         return;
@@ -299,6 +300,17 @@ const useVapi = (book: BookType) => {
       });
     } catch (e) {
       console.log("Error starting call:", e);
+      if (sessionIdRef.current) {
+        // Delete the failed session so it doesn't count toward quota
+        deleteVoiceSession(sessionIdRef.current).catch((deleteError) =>
+          console.error(
+            "Failed to delete voice session after start failure:",
+            deleteError,
+          ),
+        );
+        sessionIdRef.current = null;
+      }
+
       setStatus("idle");
       setLimitError("An error occurred while starting the call");
     }

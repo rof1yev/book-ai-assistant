@@ -18,7 +18,7 @@ export default async function HomePage() {
           ).values(),
         ).map((book) => (
           <BookCard
-            key={book._id}
+            key={book.slug}
             title={book.title}
             slug={book.slug}
             author={book.author}

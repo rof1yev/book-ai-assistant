@@ -3,7 +3,7 @@
 import VoiceSession from "@/database/models/voice-session.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { StartSessionResult, EndSessionResult } from "@/types";
-import { getCurrentBillingPeriodStart } from "../subscription-constants";
+import { getCurrentBillingPeriodStart, getPlanSessionLimit } from "../subscription-constants";
 
 export const startVoiceSession = async (
   clerkId: string,
@@ -12,11 +12,31 @@ export const startVoiceSession = async (
   try {
     await connectToDatabase();
 
+    // Get the billing period start
+    const billingPeriodStart = getCurrentBillingPeriodStart();
+
+    // Get the session limit for this clerk's plan
+    const sessionLimit = getPlanSessionLimit(clerkId);
+
+    // Count existing sessions in the current billing period
+    const existingSessionCount = await VoiceSession.countDocuments({
+      clerkId,
+      billingPeriodStart,
+    });
+
+    // Check if session limit is reached
+    if (existingSessionCount >= sessionLimit) {
+      return {
+        success: false,
+        error: "Session limit reached. Please upgrade your plan",
+      };
+    }
+
     const session = await VoiceSession.create({
       clerkId,
       bookId,
       startedAt: new Date(),
-      billingPeriodStart: getCurrentBillingPeriodStart(),
+      billingPeriodStart,
       durationSeconds: 0,
     });
 
@@ -48,14 +68,32 @@ export const endVoiceSession = async (
 
     if (!result) return { success: false, error: "Voice session not found." };
 
-    return {
-      success: true,
-    };
+    return { success: true };
   } catch (e) {
-    console.log("Error ending voice session:", e);
+    console.error("Error ending voice session:", e);
     return {
       success: false,
       error: "Failed to end voice session. Please try again later.",
+    };
+  }
+};
+
+export const deleteVoiceSession = async (
+  sessionId: string,
+): Promise<EndSessionResult> => {
+  try {
+    await connectToDatabase();
+
+    const result = await VoiceSession.findByIdAndDelete(sessionId);
+
+    if (!result) return { success: false, error: "Voice session not found." };
+
+    return { success: true };
+  } catch (e) {
+    console.error("Error deleting voice session:", e);
+    return {
+      success: false,
+      error: "Failed to delete voice session. Please try again later.",
     };
   }
 };

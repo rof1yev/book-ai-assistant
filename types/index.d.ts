@@ -5,6 +5,16 @@ import { LucideIcon } from "lucide-react";
 import z from "zod";
 import { UploadSchema } from "@/lib/zod";
 
+// ============================================
+// UTILITY TYPES
+// ============================================
+
+export type PlanType = "free" | "pro" | "premium";
+
+// ============================================
+// INTERFACES
+// ============================================
+
 interface INavItem {
   label: string;
   href: string;
