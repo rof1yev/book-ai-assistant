@@ -270,7 +270,7 @@ const useVapi = (book: BookType) => {
 
       if (!result.success) {
         setLimitError(
-          result.error || "Session limit reached. Please upgrade your plane",
+          result.error || "Session limit reached. Please upgrade your plan",
         );
         setStatus("idle");
         return;
@@ -299,6 +299,15 @@ const useVapi = (book: BookType) => {
       });
     } catch (e) {
       console.log("Error starting call:", e);
+      if (sessionIdRef.current) {
+        endVoiceSession(sessionIdRef.current, 0).catch((endError) =>
+          console.error(
+            "Failed to rollback voice session after start failure:",
+            endError,
+          ),
+        );
+      }
+
       setStatus("idle");
       setLimitError("An error occurred while starting the call");
     }
