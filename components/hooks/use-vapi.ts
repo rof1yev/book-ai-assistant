@@ -1,6 +1,7 @@
 import {
   endVoiceSession,
   startVoiceSession,
+  deleteVoiceSession,
 } from "@/lib/actions/session.actions";
 import { ASSISTANT_ID, DEFAULT_VOICE, VOICE_SETTINGS } from "@/lib/constants";
 import { BookType, Messages } from "@/types";
@@ -300,12 +301,14 @@ const useVapi = (book: BookType) => {
     } catch (e) {
       console.log("Error starting call:", e);
       if (sessionIdRef.current) {
-        endVoiceSession(sessionIdRef.current, 0).catch((endError) =>
+        // Delete the failed session so it doesn't count toward quota
+        deleteVoiceSession(sessionIdRef.current).catch((deleteError) =>
           console.error(
-            "Failed to rollback voice session after start failure:",
-            endError,
+            "Failed to delete voice session after start failure:",
+            deleteError,
           ),
         );
+        sessionIdRef.current = null;
       }
 
       setStatus("idle");

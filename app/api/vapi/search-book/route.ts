@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { Types } from "mongoose";
 import { searchBookSegments } from "@/lib/actions/book.actions";
 import { connectToDatabase } from "@/database/mongoose";
 import Book from "@/database/models/book.model";
@@ -41,6 +42,16 @@ export async function POST(request: NextRequest) {
     if (!bookId || !query)
       return NextResponse.json(
         { error: "Missing required parameters: bookId and query" },
+        { status: 400 },
+      );
+
+    // ============================================
+    // VALIDATE OBJECTID FORMAT
+    // ============================================
+
+    if (!Types.ObjectId.isValid(bookId as string))
+      return NextResponse.json(
+        { error: "Invalid bookId format. Must be a valid MongoDB ObjectId" },
         { status: 400 },
       );
 
