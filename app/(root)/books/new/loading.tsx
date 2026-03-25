@@ -1,3 +1,5 @@
+import Loader from "@/components/loader";
+
 export default function LoadingPage() {
   return (
     <div
@@ -6,7 +8,7 @@ export default function LoadingPage() {
       aria-atomic="true"
       className="min-h-svh flex items-center justify-center"
     >
-      Loading...
+      <Loader />
     </div>
   );
 }
