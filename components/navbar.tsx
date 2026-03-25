@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/constants";
 import { Show, SignInButton, UserButton, useUser } from "@clerk/nextjs";
-import { useRef } from "react";
 
 const Navbar = () => {
   const pathname = usePathname();

@@ -9,6 +9,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { getVoice } from "@/lib/utils";
+import { useSubscription } from "./use-subscription";
 
 export type CallStatus =
   | "idle"
@@ -47,6 +48,7 @@ function getVapi() {
 
 const useVapi = (book: BookType) => {
   const { userId } = useAuth();
+  const { limits } = useSubscription();
 
   //   TODO: Implement limits
 
@@ -57,6 +59,7 @@ const useVapi = (book: BookType) => {
   const [currentUserMessage, setCurrentUserMessage] = useState("");
   const [duration, setDuration] = useState<number>(0);
   const [limitError, setLimitError] = useState<string | null>(null);
+  const [isBillingError, setIsBillingError] = useState<boolean>(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -68,10 +71,10 @@ const useVapi = (book: BookType) => {
   const voice = book.persona || DEFAULT_VOICE;
 
   //* Limits
-  // const maxDurationSeconds = limits?.maxDurationPerSession
-  //   ? limits.maxDurationPerSession * 60
-  //   : 15 * 60;
-  // const maxDurationRef = useLatestRef(maxDurationSeconds);
+  const maxDurationSeconds = limits?.maxDurationPerSession
+    ? limits.maxDurationPerSession * 60
+    : 15 * 60;
+  const maxDurationRef = useLatestRef(maxDurationSeconds);
 
   // Set up Vapi event listeners
   useEffect(() => {
@@ -92,15 +95,15 @@ const useVapi = (book: BookType) => {
             );
             setDuration(newDuration);
 
-            // // Check duration limit
-            // if (newDuration >= maxDurationRef.current) {
-            //   getVapi().stop();
-            //   setLimitError(
-            //     `Session time limit (${Math.floor(
-            //       maxDurationRef.current / SECONDS_PER_MINUTE,
-            //     )} minutes) reached. Upgrade your plan for longer sessions.`,
-            //   );
-            // }
+            // Check duration limit
+            if (newDuration >= maxDurationRef.current) {
+              getVapi().stop();
+              setLimitError(
+                `Session time limit (${Math.floor(
+                  maxDurationRef.current / SECONDS_PER_MINUTE,
+                )} minutes) reached. Upgrade your plan for longer sessions.`,
+              );
+            }
           }
         }, TIMER_INTERVAL_MS);
       },
@@ -264,6 +267,7 @@ const useVapi = (book: BookType) => {
     if (!userId) return setLimitError("Please login to start a conversation");
 
     setLimitError(null);
+    setIsBillingError(false);
     setStatus("connecting");
 
     try {
@@ -273,6 +277,7 @@ const useVapi = (book: BookType) => {
         setLimitError(
           result.error || "Session limit reached. Please upgrade your plan",
         );
+        setIsBillingError(!!result.isBillingError);
         setStatus("idle");
         return;
       }
@@ -321,7 +326,10 @@ const useVapi = (book: BookType) => {
     isStoppingRef.current = true;
     await getVapi().stop();
   };
-  const clearErrors = async () => {};
+  const clearErrors = async () => {
+    setLimitError(null);
+    setIsBillingError(false);
+  };
 
   const isActive =
     status === "starting" ||
@@ -339,9 +347,10 @@ const useVapi = (book: BookType) => {
     start,
     stop,
     clearErrors,
-    // maxDurationSeconds,
-    // remainingSeconds,
-    // showTimeWaring,
+    maxDurationSeconds,
+    limitError,
+    isBillingError,
+
   };
 };
 
