@@ -13,7 +13,7 @@ export default async function HomePage() {
     <main className="wrapper pb-10">
       <HeroSection />
 
-      {books.length === 1 ? (
+      {books.length === 0 ? (
         <div className="w-full">
           <EmptyBooks />
         </div>

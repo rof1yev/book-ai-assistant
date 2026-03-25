@@ -12,13 +12,6 @@ const Navbar = () => {
   const pathname = usePathname();
   const { user } = useUser();
 
-  const buttonRef = useRef<HTMLDivElement>(null);
-
-  const handleClick = () => {
-    const btn = buttonRef.current?.querySelector("button");
-    btn?.click();
-  };
-
   return (
     <header className="w-full fixed z-50 bg-[var(--bg-primary)] border-b">
       <div className="wrapper navbar-height py-4 flex items-center justify-between">
