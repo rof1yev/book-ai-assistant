@@ -7,6 +7,7 @@ import { escapeRegex, generateSlug, serializeData } from "../utils";
 import { CreateBook, TextSegment, IBook, BookType } from "@/types";
 import BookSegment from "@/database/models/book-segment.model";
 import mongoose from "mongoose";
+import { revalidatePath } from "next/cache";
 
 export const getAllBooks = async () => {
   try {
@@ -83,6 +84,8 @@ export const createBook = async (data: CreateBook) => {
         slug,
         totalSegments: 0,
       });
+
+      revalidatePath("/");
 
       return {
         success: true,

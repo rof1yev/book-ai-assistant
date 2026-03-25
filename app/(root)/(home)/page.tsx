@@ -1,7 +1,8 @@
-import { sampleBooks } from "@/lib/constants";
 import HeroSection from "../../_components/hero-section";
 import BookCard from "../../_components/book-card";
 import { getAllBooks } from "@/lib/actions/book.actions";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const bookResults = await getAllBooks();
@@ -12,11 +13,7 @@ export default async function HomePage() {
       <HeroSection />
 
       <div className="library-books-grid">
-        {Array.from(
-          new Map(
-            [...sampleBooks, ...books].map((book) => [book.slug, book]),
-          ).values(),
-        ).map((book) => (
+        {books.map((book) => (
           <BookCard
             key={book.slug}
             title={book.title}
