@@ -1,6 +1,7 @@
 import HeroSection from "../../_components/hero-section";
 import BookCard from "../../_components/book-card";
 import { getAllBooks } from "@/lib/actions/book.actions";
+import EmptyBooks from "@/components/empty-books";
 
 export const dynamic = "force-dynamic";
 
@@ -12,17 +13,23 @@ export default async function HomePage() {
     <main className="wrapper pb-10">
       <HeroSection />
 
-      <div className="library-books-grid">
-        {books.map((book) => (
-          <BookCard
-            key={book.slug}
-            title={book.title}
-            slug={book.slug}
-            author={book.author}
-            coverURL={book.coverURL}
-          />
-        ))}
-      </div>
+      {books.length === 1 ? (
+        <div className="w-full">
+          <EmptyBooks />
+        </div>
+      ) : (
+        <div className="library-books-grid">
+          {books.map((book) => (
+            <BookCard
+              key={book.slug}
+              title={book.title}
+              slug={book.slug}
+              author={book.author}
+              coverURL={book.coverURL}
+            />
+          ))}
+        </div>
+      )}
     </main>
   );
 }

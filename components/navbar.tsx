@@ -28,12 +28,12 @@ const Navbar = () => {
             alt="Bookified"
             width={42}
             height={26}
-            loading="lazy"
+            priority
           />
           <span className="logo-text">Bookified</span>
         </Link>
 
-        <nav className="w-fit flex gap-7.5 items-center">
+        <nav className="w-fit flex gap-4 md:gap-7.5 items-center">
           {navItems.map(({ label, href }) => {
             const isActive =
               pathname === href || (href !== "/" && pathname.startsWith(href));
@@ -56,17 +56,17 @@ const Navbar = () => {
             <Show when="signed-out">
               <SignInButton mode="modal" />
             </Show>
+
             <Show when="signed-in">
-              <div
-                onClick={handleClick}
-                className="nav-user-link cursor-pointer"
-              >
-                <div ref={buttonRef}>
-                  <UserButton />
-                </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <UserButton />
                 <span className="font-medium text-foreground">
                   {user?.firstName}
                 </span>
+              </div>
+
+              <div className="sm:hidden">
+                <UserButton />
               </div>
             </Show>
           </div>
