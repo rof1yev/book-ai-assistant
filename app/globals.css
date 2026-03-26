@@ -453,6 +453,9 @@
   .vapi-status-dot-connecting {
     @apply bg-yellow-500 animate-pulse;
   }
+  .vapi-status-dot-starting {
+    @apply bg-yellow-500 animate-pulse;
+  }
   .vapi-status-dot-listening {
     @apply bg-green-500 animate-pulse;
   }

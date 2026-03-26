@@ -1,19 +1,27 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/database/mongoose";
 import Book from "@/database/models/book.model";
 import { escapeRegex, generateSlug, serializeData } from "../utils";
-import { CreateBook, TextSegment, IBook, BookType } from "@/types";
+import { CreateBook, TextSegment, BookType } from "@/types";
 import BookSegment from "@/database/models/book-segment.model";
-import mongoose from "mongoose";
-import { revalidatePath } from "next/cache";
+import { getPlanLimits, getUserPlan } from "@/lib/subscription.server";
 
-export const getAllBooks = async () => {
+export const getAllBooks = async (search?: string) => {
   try {
     await connectToDatabase();
 
-    const books = await Book.find().sort({ createdAt: -1 }).lean();
+    let query = {};
+
+    if (search) {
+      const escapedSearch = escapeRegex(search);
+      const regex = new RegExp(escapedSearch, "i");
+      query = {
+        $or: [{ title: { $regex: regex } }, { author: { $regex: regex } }],
+      };
+    }
+
+    const books = await Book.find(query).sort({ createdAt: -1 }).lean();
 
     return {
       success: true,
@@ -56,18 +64,40 @@ export const createBook = async (data: CreateBook) => {
   const slug = generateSlug(data.title);
 
   try {
-    // Verify user is authenticated on the server
-    const { userId } = await auth();
-    if (!userId) {
+    await connectToDatabase();
+
+    const existingBook = await Book.findOne({ slug }).lean();
+
+    if (existingBook) {
       return {
-        success: false,
-        error: "Unauthorized: User must be authenticated",
+        success: true,
+        data: serializeData(existingBook),
+        alreadyExists: true,
       };
     }
 
-    await connectToDatabase();
-
     // TODO: Check subscription limits before creating a book
+    const plan = await getUserPlan();
+    const limits = await getPlanLimits();
+
+    const { auth } = await import("@clerk/nextjs/server");
+    const { userId } = await auth();
+
+    if (!userId || userId !== data.clerkId)
+      return { success: false, error: "Unauthorized" };
+
+    const bookCount = await Book.countDocuments({ clerkId: userId });
+
+    if (bookCount >= limits.maxBooks) {
+      const { revalidatePath } = await import("next/cache");
+      revalidatePath("/");
+
+      return {
+        success: false,
+        error: `You have reached the maximum number of books allowed for your ${plan} plan (${limits.maxBooks}). Please upgrade to add more books.`,
+        isBillingError: true,
+      };
+    }
 
     // Use server-derived userId instead of caller-supplied data.clerkId
     try {
@@ -84,8 +114,6 @@ export const createBook = async (data: CreateBook) => {
         slug,
         totalSegments: 0,
       });
-
-      revalidatePath("/");
 
       return {
         success: true,

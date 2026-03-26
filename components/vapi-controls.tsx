@@ -1,12 +1,12 @@
 "use client";
 
-import { Mic, MicOff } from "lucide-react";
-import { BookType, IBook } from "@/types";
+import { AudioLines, Mic, MicOff, Tally5Icon } from "lucide-react";
+import { BookType } from "@/types";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import useVapi from "./hooks/use-vapi";
+import useVapi from "../hooks/use-vapi";
 import Transcript from "./transcript";
 
 const VapiControls = ({ book }: { book: BookType }) => {
@@ -19,24 +19,23 @@ const VapiControls = ({ book }: { book: BookType }) => {
     duration,
     start,
     stop,
-    // clearError,
-    // limitError,
-    // isBillingError,
-    // maxDurationSeconds,
+    clearErrors,
+    limitError,
+    isBillingError,
+    maxDurationSeconds,
   } = useVapi(book);
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (limitError) {
-  //     toast.error(limitError);
-  //     if (isBillingError) {
-  //       router.push("/subscriptions");
-  //     } else {
-  //       router.push("/");
-  //     }
-  //     clearError();
-  //   }
-  // }, [isBillingError, limitError, router, clearError]);
+  useEffect(() => {
+    if (limitError) {
+      toast.error(limitError);
+
+      if (isBillingError) router.push("/subscriptions");
+      else router.push("/");
+
+      clearErrors();
+    }
+  }, [isBillingError, limitError, router, clearErrors]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -120,7 +119,10 @@ const VapiControls = ({ book }: { book: BookType }) => {
 
               <div className="vapi-status-indicator">
                 <span className="vapi-status-text">
-                  {formatDuration(duration)}
+                  <span className="vapi-status-text">
+                    {formatDuration(duration)}/
+                    {formatDuration(maxDurationSeconds)}
+                  </span>
                 </span>
               </div>
             </div>
