@@ -47,7 +47,7 @@ export const startVoiceSession = async (
     return {
       success: true,
       sessionId: session._id.toString(),
-      maxDurationMinutes: session.maxDurationMinutes,
+      maxDurationMinutes: limits.maxDurationPerSession,
     };
   } catch (e) {
     console.error("Error starting voice session:", e);

@@ -14,8 +14,8 @@ export const getUserPlan = async (): Promise<PlanType> => {
 
     if (!userId) return PLANS.FREE;
 
-    if (has({ plan: "standard" })) return PLANS.STANDARD;
-    else if (has({ plan: "pro" })) return PLANS.PRO;
+    if (has({ plan: "pro" })) return PLANS.PRO;
+    else if (has({ plan: "standard" })) return PLANS.STANDARD;
     else return PLANS.FREE;
   } catch (e) {
     console.error("Error checking user subscription:", e);

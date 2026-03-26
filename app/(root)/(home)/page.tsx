@@ -20,7 +20,7 @@ export default async function HomePage({
     <main className="wrapper pb-10">
       <HeroSection />
 
-      {books.length > 0 && (
+      {(books.length > 0 || query) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-10">
           <h2 className="text-3xl font-serif font-bold text-[#212a3b]">
             Recent Books

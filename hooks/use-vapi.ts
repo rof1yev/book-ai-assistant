@@ -6,7 +6,7 @@ import {
 import { ASSISTANT_ID, DEFAULT_VOICE, VOICE_SETTINGS } from "@/lib/constants";
 import { BookType, Messages } from "@/types";
 import { useAuth } from "@clerk/nextjs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { getVoice } from "@/lib/utils";
 import { useSubscription } from "./use-subscription";
@@ -326,10 +326,10 @@ const useVapi = (book: BookType) => {
     isStoppingRef.current = true;
     await getVapi().stop();
   };
-  const clearErrors = async () => {
+  const clearErrors = useCallback(async () => {
     setLimitError(null);
     setIsBillingError(false);
-  };
+  }, []);
 
   const isActive =
     status === "starting" ||
@@ -350,7 +350,6 @@ const useVapi = (book: BookType) => {
     maxDurationSeconds,
     limitError,
     isBillingError,
-
   };
 };
 

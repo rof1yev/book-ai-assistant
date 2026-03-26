@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { searchBookSegments } from "@/lib/actions/book.actions";
+import { auth } from "@clerk/nextjs/server";
+import { connectToDatabase } from "@/database/mongoose";
+import Book from "@/database/models/book.model";
 
 // Helper function to process book search logic
-async function processBookSearch(bookId: unknown, query: unknown) {
+async function processBookSearch(
+  bookId: unknown,
+  query: unknown,
+  clerkId: string,
+) {
   // Validate inputs before conversion to prevent null/undefined becoming "null"/"undefined" strings
   if (bookId == null || query == null || query === "")
     return { result: "Missing bookId or query" };
@@ -19,6 +26,11 @@ async function processBookSearch(bookId: unknown, query: unknown) {
     !queryStr
   )
     return { result: "Missing bookId or query" };
+
+  // Verify book ownership
+  await connectToDatabase();
+  const book = await Book.findOne({ _id: bookIdStr, clerkId });
+  if (!book) return { result: "Book not found or access denied" };
 
   // Execute search
   const searchResult = await searchBookSegments(bookIdStr, queryStr, 3);
@@ -53,9 +65,16 @@ function parseArgs(args: unknown): Record<string, unknown> {
 
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
     const body = await request.json();
 
-    console.log("Vapi search-book request:", JSON.stringify(body, null, 2));
+    console.log("Vapi search-book request received:", {
+      hasFunctionCall: !!body?.message?.functionCall,
+      toolCallCount:
+        body?.message?.toolCallList?.length ??
+        body?.message?.toolCalls?.length ??
+        0,
+    });
 
     // Support multiple Vapi formats
     const functionCall = body?.message?.functionCall;
@@ -68,7 +87,11 @@ export async function POST(request: Request) {
       const parsed = parseArgs(parameters);
 
       if (name === "searchBook") {
-        const result = await processBookSearch(parsed.bookId, parsed.query);
+        const result = await processBookSearch(
+          parsed.bookId,
+          parsed.query,
+          String(userId),
+        );
         return NextResponse.json(result);
       }
 
@@ -90,7 +113,11 @@ export async function POST(request: Request) {
       const args = parseArgs(func?.arguments);
 
       if (name === "searchBook") {
-        const searchResult = await processBookSearch(args.bookId, args.query);
+        const searchResult = await processBookSearch(
+          args.bookId,
+          args.query,
+          String(userId),
+        );
         results.push({ toolCallId: id, ...searchResult });
       } else
         results.push({ toolCallId: id, result: `Unknown function: ${name}` });

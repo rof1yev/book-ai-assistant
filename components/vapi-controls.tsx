@@ -1,6 +1,6 @@
 "use client";
 
-import { Mic, MicOff } from "lucide-react";
+import { AudioLines, Mic, MicOff, Tally5Icon } from "lucide-react";
 import { BookType } from "@/types";
 import Image from "next/image";
 import { toast } from "sonner";

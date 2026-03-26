@@ -12,6 +12,11 @@ const Search = () => {
 
   const [query, setQuery] = useState(searchParams.get("query") || "");
 
+  // Sync state when URL changes externally (back/forward navigation)
+  useEffect(() => {
+    setQuery(searchParams.get("query") || "");
+  }, [searchParams]);
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);

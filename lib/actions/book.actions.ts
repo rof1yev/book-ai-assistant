@@ -66,7 +66,6 @@ export const createBook = async (data: CreateBook) => {
   try {
     await connectToDatabase();
 
-    const slug = generateSlug(data.title);
     const existingBook = await Book.findOne({ slug }).lean();
 
     if (existingBook) {
